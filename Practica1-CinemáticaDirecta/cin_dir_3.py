@@ -92,9 +92,8 @@ def matriz_T(d,theta,a,alpha):
 # ******************************************************************************
 
 # ?
-# ? Modificamos nvar a 3 variables
+# ? Modificamos nvar a 5 variables
 # ? Modificamos Parámetros D-H, añadimos una columna más y nuestros valores.
-# ? Añadimos un nuevo origen o33
 
 
 # Introducción de los valores de las articulaciones
