@@ -118,9 +118,16 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
 
     # oAnterior es un punto de O, que se va moviendo de final a principio.
 
-    # tangente alfa1 = yT-yoAnterior / xT-XoAnterior
-    # tangente alfa2 = yoFinal-yoAnterior / xoFinal-xoAnterior
-    # Ttita = alfa1 - alfa2
+    # opuesto1 = yT-yoAnterior 
+    # contiguo1 = xT-xoAnterior
+
+    # opuesto2 = yoFinal-yoAnterior
+    # contiguo2 = xoFinal-xoAnterior
+
+    # alfa1 = tangente(opuesto1/contiguo1)
+    # alfa2 = tangente(opuesto2/contiguo2)
+
+    # Ttita = alfa1 - alfa2 --> ángulo
 
     T = objetivo
     oAnterior = O[-1][len(th)-i-1]
