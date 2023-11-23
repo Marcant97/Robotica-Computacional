@@ -118,23 +118,13 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
 
     # oAnterior es un punto de O, que se va moviendo de final a principio.
 
-    # opuesto1 = yT-yoAnterior 
-    # contiguo1 = xT-xoAnterior
-
-    # opuesto2 = yoFinal-yoAnterior
-    # contiguo2 = xoFinal-xoAnterior
-
-    # alfa1 = tangente(opuesto1/contiguo1)
-    # alfa2 = tangente(opuesto2/contiguo2)
-
-    # Ttita = alfa1 - alfa2 --> ángulo
 
     T = objetivo
     oAnterior = O[-1][len(th)-i-1]
     oFinal = O[-1][-1]
 
-    print('oFinal = '+str(oFinal))
-    print('oAnterior = '+str(oAnterior))
+    # print('oFinal = '+str(oFinal))
+    # print('oAnterior = '+str(oAnterior))
 
     opuesto1 = T[1]-oAnterior[1]
     contiguo1 = T[0]-oAnterior[0]
@@ -145,10 +135,20 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
     tan2 = atan2(opuesto2,contiguo2)
 
     Ttita = tan1-tan2
-    print ('Ttita = '+str(Ttita))
+    # print ('Ttita = '+str(Ttita))
 
     # Actualizar th
     th[len(th)-i-1] += Ttita
+    if th[len(th)-i-1] > pi:
+      th[len(th)-i-1] -= 2*pi
+      print('th mayor que pi, th:', th[len(th)-i-1])
+    elif th[len(th)-i-1] < -pi:
+      th[len(th)-i-1] += 2*pi
+      print('th menor que -pi, th:', th[len(th)-i-1])
+
+
+    
+
 
     
     O.append(cin_dir(th,a))
