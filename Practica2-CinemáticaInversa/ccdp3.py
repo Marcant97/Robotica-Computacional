@@ -137,17 +137,25 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
     Ttita = tan1-tan2
     # print ('Ttita = '+str(Ttita))
 
-    # Actualizar th
+    # Actualizar th --> controlamos que th esté entre -pi y pi, para evitar que el movimiento se haga por el lado largo.
     th[len(th)-i-1] += Ttita
     if th[len(th)-i-1] > pi:
       th[len(th)-i-1] -= 2*pi
-      print('th mayor que pi, th:', th[len(th)-i-1])
     elif th[len(th)-i-1] < -pi:
       th[len(th)-i-1] += 2*pi
-      print('th menor que -pi, th:', th[len(th)-i-1])
 
 
     
+
+
+
+    #* PENDIENTE
+    #* 1. Articulaciones prismáticas
+    #* 2. Control de límites de movimiento
+
+
+
+
 
 
     
