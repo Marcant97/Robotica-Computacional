@@ -82,6 +82,12 @@ def cin_dir(th,a):
 # valores articulares arbitrarios para la cinemática directa inicial
 th=[0.,0.,0.]
 a =[5.,5.,5.]
+# etiqueta para diferenciar si el par th[i],a[i] es de revolución o prismático  
+REV = 0
+PRI = 1
+articulaciones = [REV,REV,REV]
+
+
 L = sum(a) # variable para representación gráfica
 EPSILON = .1
 
@@ -111,11 +117,13 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
   # Para cada combinación de articulaciones:
   for i in range(len(th)):
     # * cálculo de la cinemática inversa:
-    
+
+    # detectamos si la articulación es de revolución o prismática
+    # * REVOLUCIÓN:
+
     # T es el punto al que queremos llegar (variable objetivo)
     # oFinal es el último punto, el que alineamos entre el objetivo y 02
     # oAnterior es la articulación que movemos
-
     # oAnterior es un punto de O, que se va moviendo de final a principio.
 
 
@@ -145,7 +153,8 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       th[len(th)-i-1] += 2*pi
 
 
-    
+    # * PRISMÁTICA:
+
 
 
 
