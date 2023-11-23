@@ -80,12 +80,17 @@ def cin_dir(th,a):
 # Cálculo de la cinemática inversa de forma iterativa por el método CCD
 
 # valores articulares arbitrarios para la cinemática directa inicial
+# th=[0.,0.,0.]
+# a =[5.,5.,5.]
 th=[0.,0.,0.]
-a =[5.,5.,5.]
-# etiqueta para diferenciar si el par th[i],a[i] es de revolución o prismático  
+a =[1.,1.,1.]
+
+# ?etiqueta para diferenciar si el par th[i],a[i] es de revolución o prismático  
 REV = 0
 PRI = 1
-articulaciones = [REV,REV,REV]
+# articulaciones = [REV,REV,REV]
+articulaciones = [REV,PRI,REV]
+
 
 
 L = sum(a) # variable para representación gráfica
@@ -118,42 +123,57 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
   for i in range(len(th)):
     # * cálculo de la cinemática inversa:
 
-    # detectamos si la articulación es de revolución o prismática
-    # * REVOLUCIÓN:
-
     # T es el punto al que queremos llegar (variable objetivo)
     # oFinal es el último punto, el que alineamos entre el objetivo y 02
     # oAnterior es la articulación que movemos
     # oAnterior es un punto de O, que se va moviendo de final a principio.
 
-
     T = objetivo
     oAnterior = O[-1][len(th)-i-1]
     oFinal = O[-1][-1]
 
-    # print('oFinal = '+str(oFinal))
-    # print('oAnterior = '+str(oAnterior))
 
-    opuesto1 = T[1]-oAnterior[1]
-    contiguo1 = T[0]-oAnterior[0]
-    opuesto2 = oFinal[1]-oAnterior[1]
-    contiguo2 = oFinal[0]-oAnterior[0]
+    # detectamos si la articulación es de revolución o prismática
+    # * REVOLUCIÓN:
+    if articulaciones[len(th)-i-1] == REV:
 
-    tan1 = atan2(opuesto1,contiguo1)
-    tan2 = atan2(opuesto2,contiguo2)
+      opuesto1 = T[1]-oAnterior[1]
+      contiguo1 = T[0]-oAnterior[0]
+      opuesto2 = oFinal[1]-oAnterior[1]
+      contiguo2 = oFinal[0]-oAnterior[0]
 
-    Ttita = tan1-tan2
-    # print ('Ttita = '+str(Ttita))
+      tan1 = atan2(opuesto1,contiguo1)
+      tan2 = atan2(opuesto2,contiguo2)
 
-    # Actualizar th --> controlamos que th esté entre -pi y pi, para evitar que el movimiento se haga por el lado largo.
-    th[len(th)-i-1] += Ttita
-    if th[len(th)-i-1] > pi:
-      th[len(th)-i-1] -= 2*pi
-    elif th[len(th)-i-1] < -pi:
-      th[len(th)-i-1] += 2*pi
+      Ttita = tan1-tan2
+      # print ('Ttita = '+str(Ttita))
+
+      # Actualizar th --> controlamos que th esté entre -pi y pi, para evitar que el movimiento se haga por el lado largo.
+      th[len(th)-i-1] += Ttita
+      if th[len(th)-i-1] > pi:
+        th[len(th)-i-1] -= 2*pi
+      elif th[len(th)-i-1] < -pi:
+        th[len(th)-i-1] += 2*pi
 
 
     # * PRISMÁTICA:
+    if articulaciones[len(th)-i-1] == PRI:
+      # w es el sumatorio de todos los ángulos hasta la articulación que estamos moviendo
+      w = 0
+      for j in range(len(th)-i):
+        w += th[j]
+      print ('w = '+str(w))
+      
+      # vectorW = [cos(w),sin(w)], es un vector unitario en estas direcciones desde Oi-1
+      vectorW = [cos(w),sin(w)]
+
+      # d es la distancia, d= vectorW * (R -On)
+      d = np.dot(vectorW,np.subtract(T,oAnterior))
+      print ('d = '+str(d))
+
+      # por último, actualizamos a
+      a[len(th)-i-1] += d
+
 
 
 
