@@ -80,16 +80,21 @@ def cin_dir(th,a):
 # Cálculo de la cinemática inversa de forma iterativa por el método CCD
 
 # valores articulares arbitrarios para la cinemática directa inicial
+
 # th=[0.,0.,0.]
-# a =[5.,5.,5.]
-th=[0.,0.,0.]
-a =[1.,1.,1.]
+# a =[1.,1.,1.]
+
+th=[0.,0.,0.,0.,0.]
+a =[5.,5.,5.,5.,5.]
 
 # ?etiqueta para diferenciar si el par th[i],a[i] es de revolución o prismático  
 REV = 0
 PRI = 1
-# articulaciones = [REV,REV,REV]
-articulaciones = [REV,PRI,REV]
+# articulaciones = [REV,PRI,REV]
+# límites = [[-pi,pi],[-5,5],[-pi,pi]]
+
+articulaciones = [REV,PRI,REV,PRI,REV]
+límites = [[-pi/4,pi/2],[5,10],[-pi/4,pi/2],[5,15],[-pi/4,pi/2]]
 
 
 
@@ -150,11 +155,28 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       # print ('Ttita = '+str(Ttita))
 
       # Actualizar th --> controlamos que th esté entre -pi y pi, para evitar que el movimiento se haga por el lado largo.
+      print ('th antes = '+str(th)) 
+      
       th[len(th)-i-1] += Ttita
       if th[len(th)-i-1] > pi:
         th[len(th)-i-1] -= 2*pi
       elif th[len(th)-i-1] < -pi:
         th[len(th)-i-1] += 2*pi
+
+      print ('th despues = '+str(th))
+
+      # Actualizar a --> controlamos que a esté entre los límites
+      if th[len(th)-i-1] < límites[len(th)-i-1][0]:
+        # articulación ha llegado al límite inferior
+        print('Límite inferior alcanzado')
+        th[len(th)-i-1] = límites[len(th)-i-1][0]
+      elif th[len(th)-i-1] > límites[len(th)-i-1][1]:
+        # articulación ha llegado al límite superior
+        print('Límite superior alcanzado')
+        th[len(th)-i-1] = límites[len(th)-i-1][1]
+      else:
+        # articulación no ha llegado a ningún límite
+        th[len(th)-i-1] = th[len(th)-i-1]
 
 
     # * PRISMÁTICA:
@@ -179,7 +201,18 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
 
       # por último, actualizamos a
       print ('a antes = '+str(a))
-      a[len(th)-i-1] += d
+      # no podemos pasarnos de los límites
+      if a[len(th)-i-1]+d < límites[len(th)-i-1][0]:
+        # articulación ha llegado al límite inferior
+        a[len(th)-i-1] = límites[len(th)-i-1][0]
+      elif a[len(th)-i-1]+d > límites[len(th)-i-1][1]:
+        # articulación ha llegado al límite superior
+        a[len(th)-i-1] = límites[len(th)-i-1][1]
+      else:
+        # articulación no ha llegado a ningún límite
+        a[len(th)-i-1] += d 
+
+      # a[len(th)-i-1] += d
       print ('a despues = '+str(a))
 
 
