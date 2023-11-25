@@ -136,6 +136,7 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
     # detectamos si la articulación es de revolución o prismática
     # * REVOLUCIÓN:
     if articulaciones[len(th)-i-1] == REV:
+      print('\n- Articulación de revolución')
 
       opuesto1 = T[1]-oAnterior[1]
       contiguo1 = T[0]-oAnterior[0]
@@ -159,6 +160,7 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
     # * PRISMÁTICA:
     if articulaciones[len(th)-i-1] == PRI:
       # w es el sumatorio de todos los ángulos hasta la articulación que estamos moviendo
+      print('\n- Articulación prismática')
       w = 0
       for j in range(len(th)-i):
         w += th[j]
@@ -166,13 +168,19 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       
       # vectorW = [cos(w),sin(w)], es un vector unitario en estas direcciones desde Oi-1
       vectorW = [cos(w),sin(w)]
+      print ('vectorW = '+str(vectorW))
 
-      # d es la distancia, d= vectorW * (R -On)
-      d = np.dot(vectorW,np.subtract(T,oAnterior))
+      # d es la distancia, d= vectorW * (R-On)
+      print('T = '+str(T))
+      print('oFinal = '+str(oFinal))
+      print('T-oFinal = '+str(np.subtract(T,oFinal)))
+      d = np.dot(vectorW,np.subtract(T,oFinal))
       print ('d = '+str(d))
 
       # por último, actualizamos a
+      print ('a antes = '+str(a))
       a[len(th)-i-1] += d
+      print ('a despues = '+str(a))
 
 
 
