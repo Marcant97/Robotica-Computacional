@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Robótica Computacional - 
-# Grado en Ingeniería Informática (Cuarto)
+# Grado en Ingenieria Informática (Cuarto)
 # Práctica: Resolución de la cinemática inversa mediante CCD
 #           (Cyclic Coordinate Descent).
 
@@ -16,7 +16,7 @@ import colorsys as cs
 # Declaración de funciones
 
 def muestra_origenes(O,final=0):
-  # Muestra los orígenes de coordenadas para cada articulación
+  # Muestra los origenes de coordenadas para cada articulación
   print('Origenes de coordenadas:')
   for i in range(len(O)):
     print('(O'+str(i)+')0\t= '+str([round(j,3) for j in O[i]]))
@@ -29,12 +29,18 @@ def muestra_origenes(O,final=0):
 def muestra_robot(O,obj):
   # Muestra el robot graficamente
   plt.figure()
+  
   plt.xlim(-L,L)
   plt.ylim(-L,L)
   T = [np.array(o).T.tolist() for o in O]
   for i in range(len(T)):
     plt.plot(T[i][0], T[i][1], '-o', color=cs.hsv_to_rgb(i/float(len(T)),1,1))
   plt.plot(obj[0], obj[1], '*')
+
+  #* Ajusta automáticamente el tamaño del gráfico
+  # tight=False --> ajusta el gráfico a los límites de los ejes añadiendo un pequeño margen
+  plt.gca().autoscale(enable=True, axis='both', tight=False)
+  
   plt.pause(0.0001)
   plt.show()
 
@@ -81,27 +87,24 @@ def cin_dir(th,a):
 
 # valores articulares arbitrarios para la cinemática directa inicial
 
-# th=[0.,0.,0.]
-# a =[1.,1.,1.]
-
-th=[0.,0.,0.,0.,0.]
-a =[5.,5.,5.,5.,5.]
-
+th=[]
+a=[]
 # ?etiqueta para diferenciar si el par th[i],a[i] es de revolución o prismático  
 REV = 0
 PRI = 1
-# articulaciones = [REV,PRI,REV]
-# límites = [[-pi,pi],[-5,5],[-pi,pi]]
+articulaciones=[]
+limites=[]
 
-articulaciones = [REV,PRI,REV,PRI,REV]
-límites = [[-pi/4,pi/2],[5,10],[-pi/4,pi/2],[5,15],[-pi/4,pi/2]]
+# th=[0.,0.,0.,0.,0.]
+# a =[5.,5.,5.,5.,5.]
+# articulaciones = [REV,PRI,REV,PRI,REV]
+# limites = [[-pi/4,pi/2],[5,10],[-pi/4,pi/2],[5,15],[-pi/4,pi/2]]
 
 
+L = sum(a)     # variable para representación gráfica
+EPSILON = .1   # para la precisión
 
-L = sum(a) # variable para representación gráfica
-EPSILON = .1
-
-#plt.ion() # modo interactivo
+# plt.ion() # modo interactivo
 
 # introducción del punto para la cinemática inversa
 if len(sys.argv) != 3:
@@ -118,15 +121,63 @@ dist = float("inf")
 prev = 0.
 iteracion = 1
 
-# ? mientras la distancia sea mayor que epsilon, y además se comprueba que no se ha entrado en un bucle infinito
-# ? por ejemplo, con el brazo totalmente extendido, si el objetivo está fuera del radio de acción del brazo
+# **********************************************************************************************************************
+
+# Función que se encarga de obtener los valores de las articulaciones, limites, etc.
+def obtener_articulaciones(numero_articulaciones):
+  for i in range(numero_articulaciones):
+    print('Articulación '+str(i)+':')
+    th[i] = float(input('Introduce el valor de theta: '))
+    a[i] = float(input('Introduce el valor de a: '))
+
+    while True:
+      articulaciones[i] = int(input('¿Es de revolución o prismática? (0/1): '))
+      if articulaciones[i] == REV or articulaciones[i] == PRI:
+        break
+      else:
+        print('Introduce 0 o 1')
+
+    if articulaciones[i] == REV:
+      print('Introduce los limites de la articulación (en grados):')
+      # se introduce en grados para mayor comodidad del usuario, luego se convierte a radianes.
+      limites_aux = [float(input('Limite inferior: ')),float(input('Limite superior: '))]
+      limites[i] = [radians(limites_aux[0]),radians(limites_aux[1])]
+
+    elif articulaciones[i] == PRI:
+      print('Introduce los limites de la articulación:')
+      limites[i] = [float(input('Limite inferior: ')),float(input('Limite superior: '))]
+
+
+
+
+numero_articulaciones =  int(input('Introduce el número de articulaciones: '))
+
+# redimensionamos los tamaños de los arrays.
+articulaciones = [0]*numero_articulaciones
+limites = [0]*numero_articulaciones
+th = [0]*numero_articulaciones
+a = [0]*numero_articulaciones
+
+obtener_articulaciones(numero_articulaciones)
+
+# print('Articulaciones: '+str(articulaciones))
+# print('Limites: '+str(limites))
+# print('th: '+str(th))
+# print('a: '+str(a))
+
+
+
+
+# mientras la distancia sea mayor que epsilon, y además se comprueba que no se ha entrado en un bucle infinito
+# por ejemplo, con el brazo totalmente extendido, si el objetivo está fuera del radio de acción del brazo
+
 while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
   prev = dist
   O=[cin_dir(th,a)]
   
   # Para cada combinación de articulaciones:
   for i in range(len(th)):
-    # * cálculo de la cinemática inversa:
+    #* cálculo de la cinemática inversa:
 
     # T es el punto al que queremos llegar (variable objetivo)
     # oFinal es el último punto, el que alineamos entre el objetivo y 02
@@ -139,7 +190,7 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
 
 
     # detectamos si la articulación es de revolución o prismática
-    # * REVOLUCIÓN:
+    #* REVOLUCIÓN:
     if articulaciones[len(th)-i-1] == REV:
       print('\n- Articulación de revolución')
 
@@ -152,30 +203,25 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       tan2 = atan2(opuesto2,contiguo2)
 
       Ttita = tan1-tan2
-      # print ('Ttita = '+str(Ttita))
 
-      # Actualizar th --> controlamos que th esté entre -pi y pi, para evitar que el movimiento se haga por el lado largo.
-      print ('th antes = '+str(th)) 
-      
+      # Actualizamos th --> controlamos que th esté entre -pi y pi, para evitar que el movimiento se haga por el lado largo.
       th[len(th)-i-1] += Ttita
       if th[len(th)-i-1] > pi:
         th[len(th)-i-1] -= 2*pi
       elif th[len(th)-i-1] < -pi:
         th[len(th)-i-1] += 2*pi
 
-      print ('th despues = '+str(th))
-
-      # Actualizar a --> controlamos que a esté entre los límites
-      if th[len(th)-i-1] < límites[len(th)-i-1][0]:
-        # articulación ha llegado al límite inferior
-        print('Límite inferior alcanzado')
-        th[len(th)-i-1] = límites[len(th)-i-1][0]
-      elif th[len(th)-i-1] > límites[len(th)-i-1][1]:
-        # articulación ha llegado al límite superior
-        print('Límite superior alcanzado')
-        th[len(th)-i-1] = límites[len(th)-i-1][1]
+      # Actualizar a --> controlamos que a esté entre los limites
+      if th[len(th)-i-1] < limites[len(th)-i-1][0]:
+        # articulación ha llegado al limite inferior
+        print('Limite inferior alcanzado')
+        th[len(th)-i-1] = limites[len(th)-i-1][0]
+      elif th[len(th)-i-1] > limites[len(th)-i-1][1]:
+        # articulación ha llegado al limite superior
+        print('Limite superior alcanzado')
+        th[len(th)-i-1] = limites[len(th)-i-1][1]
       else:
-        # articulación no ha llegado a ningún límite
+        # articulación no ha llegado a ningún limite
         th[len(th)-i-1] = th[len(th)-i-1]
 
 
@@ -190,44 +236,22 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       
       # vectorW = [cos(w),sin(w)], es un vector unitario en estas direcciones desde Oi-1
       vectorW = [cos(w),sin(w)]
-      print ('vectorW = '+str(vectorW))
 
       # d es la distancia, d= vectorW * (R-On)
-      print('T = '+str(T))
-      print('oFinal = '+str(oFinal))
-      print('T-oFinal = '+str(np.subtract(T,oFinal)))
       d = np.dot(vectorW,np.subtract(T,oFinal))
       print ('d = '+str(d))
 
       # por último, actualizamos a
-      print ('a antes = '+str(a))
-      # no podemos pasarnos de los límites
-      if a[len(th)-i-1]+d < límites[len(th)-i-1][0]:
-        # articulación ha llegado al límite inferior
-        a[len(th)-i-1] = límites[len(th)-i-1][0]
-      elif a[len(th)-i-1]+d > límites[len(th)-i-1][1]:
-        # articulación ha llegado al límite superior
-        a[len(th)-i-1] = límites[len(th)-i-1][1]
+      # no podemos pasarnos de los limites
+      if a[len(th)-i-1]+d < limites[len(th)-i-1][0]:
+        # articulación ha llegado al limite inferior
+        a[len(th)-i-1] = limites[len(th)-i-1][0]
+      elif a[len(th)-i-1]+d > limites[len(th)-i-1][1]:
+        # articulación ha llegado al limite superior
+        a[len(th)-i-1] = limites[len(th)-i-1][1]
       else:
-        # articulación no ha llegado a ningún límite
+        # articulación no ha llegado a ningún limite
         a[len(th)-i-1] += d 
-
-      # a[len(th)-i-1] += d
-      print ('a despues = '+str(a))
-
-
-
-
-
-    #* PENDIENTE
-    #* 1. Articulaciones prismáticas
-    #* 2. Control de límites de movimiento
-
-
-
-
-
-
     
     O.append(cin_dir(th,a))
 
