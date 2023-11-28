@@ -1,3 +1,4 @@
+.1 --> valor de epsilon
 4 --> Número de articulaciones en la primera fila
 5 5 5 5 --> valores de a
 90 90 90 90 --> valores de th

@@ -30,8 +30,8 @@ def muestra_robot(O,obj):
   # Muestra el robot graficamente
   plt.figure()
   
-  plt.xlim(-L,L)
-  plt.ylim(-L,L)
+  # plt.xlim(-L,L)
+  # plt.ylim(-L,L)
   T = [np.array(o).T.tolist() for o in O]
   for i in range(len(T)):
     plt.plot(T[i][0], T[i][1], '-o', color=cs.hsv_to_rgb(i/float(len(T)),1,1))
@@ -95,7 +95,7 @@ limites=[]
 
 
 L = sum(a)     # variable para representación gráfica
-EPSILON = .1   # para la precisión
+Epsilon = .1   # para la precisión
 
 # plt.ion() # modo interactivo
 
@@ -123,8 +123,14 @@ def leer_fichero(fichero):
   lineas = f.readlines()
   f.close()
 
-  # El número de articulaciones es el primer valor del fichero
-  numero_articulaciones = int(lineas[0]) 
+  # El primer valor es epsilon
+  Epsilon= float(lineas[0])
+  print('Epsilon: '+str(Epsilon))
+  lineas.pop(0)
+
+  # El número de articulaciones es el siguiente valor del fichero
+  numero_articulaciones = int(lineas[0])
+  print('Número de articulaciones: '+str(numero_articulaciones))
   lineas.pop(0)
 
   # redimensionamos los tamaños de los arrays.
@@ -141,8 +147,6 @@ def leer_fichero(fichero):
         print('Error en el fichero')
         print(f'Línea incorrecta en la línea {i}: {linea}')
         exit()
-    else:
-        print(f'Línea correcta en la línea {i}: {linea}')
   
 
   a = [float(i) for i in lineas[0].split()]
@@ -162,9 +166,7 @@ def leer_fichero(fichero):
     elif articulaciones[i] == PRI:
       limites[i] = [float(j) for j in limites_aux[i].split()]
 
-  print('limites final: '+str(limites))
-
-  return articulaciones, limites, th, a
+  return articulaciones, limites, th, a, Epsilon
 
   
 
@@ -176,7 +178,7 @@ def leer_fichero(fichero):
 # **********************************************************************************************************************
 # ? COMIENZA EL PROGRAMA
 nombre_fichero = input('Introduce el nombre del fichero de entrada: ')
-articulaciones, limites, th, a = leer_fichero(nombre_fichero)
+articulaciones, limites, th, a, Epsilon = leer_fichero(nombre_fichero)
 
 print('Articulaciones: '+str(articulaciones))
 print('Limites: '+str(limites))
@@ -186,7 +188,7 @@ print('a: '+str(a))
 # mientras la distancia sea mayor que epsilon, y además se comprueba que no se ha entrado en un bucle infinito
 # por ejemplo, con el brazo totalmente extendido, si el objetivo está fuera del radio de acción del brazo
 
-while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
+while (dist > Epsilon and abs(prev-dist) > Epsilon/100.):
   prev = dist
   O=[cin_dir(th,a)]
   
@@ -237,6 +239,8 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       else: # articulación no ha llegado a ningún limite
         th[len(th)-i-1] = th[len(th)-i-1]
 
+      print('th:', th[len(th)-i-1])
+
 
     # * PRISMÁTICA:
     if articulaciones[len(th)-i-1] == PRI:
@@ -265,7 +269,9 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
         a[len(th)-i-1] = limites[len(th)-i-1][1]
       else:
         # articulación no ha llegado a ningún limite
-        a[len(th)-i-1] += d 
+        a[len(th)-i-1] += d
+
+      print('a:', a[len(th)-i-1])
     
     O.append(cin_dir(th,a))
 
@@ -277,11 +283,11 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
   iteracion+=1
   O[0]=O[-1]
 
-if dist <= EPSILON:
+if dist <= Epsilon:
   print ("\n" + str(iteracion) + " iteraciones para converger.")
 else:
   print ("\nNo hay convergencia tras " + str(iteracion) + " iteraciones.")
-print ("- Umbral de convergencia epsilon: " + str(EPSILON))
+print ("- Umbral de convergencia epsilon: " + str(Epsilon))
 print ("- Distancia al objetivo:          " + str(round(dist,5)))
 print ("- Valores finales de las articulaciones:")
 for i in range(len(th)):
