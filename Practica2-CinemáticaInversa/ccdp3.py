@@ -85,8 +85,6 @@ def cin_dir(th,a):
 # ******************************************************************************
 # Cálculo de la cinemática inversa de forma iterativa por el método CCD
 
-# valores articulares arbitrarios para la cinemática directa inicial
-
 th=[]
 a=[]
 # ?etiqueta para diferenciar si el par th[i],a[i] es de revolución o prismático  
@@ -94,11 +92,6 @@ REV = 0
 PRI = 1
 articulaciones=[]
 limites=[]
-
-# th=[0.,0.,0.,0.,0.]
-# a =[5.,5.,5.,5.,5.]
-# articulaciones = [REV,PRI,REV,PRI,REV]
-# limites = [[-pi/4,pi/2],[5,10],[-pi/4,pi/2],[5,15],[-pi/4,pi/2]]
 
 
 L = sum(a)     # variable para representación gráfica
@@ -123,50 +116,72 @@ iteracion = 1
 
 # **********************************************************************************************************************
 
-# Función que se encarga de obtener los valores de las articulaciones, limites, etc.
-def obtener_articulaciones(numero_articulaciones):
+
+def leer_fichero(fichero):
+  # leemos el fichero
+  f = open(fichero,'r')
+  lineas = f.readlines()
+  f.close()
+
+  # El número de articulaciones es el primer valor del fichero
+  numero_articulaciones = int(lineas[0]) 
+  lineas.pop(0)
+
+  # redimensionamos los tamaños de los arrays.
+  articulaciones = [0]*numero_articulaciones
+  limites = [0]*numero_articulaciones
+  th = [0]*numero_articulaciones
+  a = [0]*numero_articulaciones
+
+  # comprobamos el fichero
+  for i, linea in enumerate(lineas, 1):
+    elementos = linea.split()
+    # Comprobamos que el número de elementos de cada línea se corresponde con el número de articulaciones
+    if len(elementos) != numero_articulaciones:
+        print('Error en el fichero')
+        print(f'Línea incorrecta en la línea {i}: {linea}')
+        exit()
+    else:
+        print(f'Línea correcta en la línea {i}: {linea}')
+  
+
+  a = [float(i) for i in lineas[0].split()]
+  th = [radians(float(i)) for i in lineas[1].split()] # pasamos a radianes
+  articulaciones = [int(i) for i in lineas[2].split()] # 0=REV, 1=PRI
+
+  limites_aux = [str(i) for i in lineas[3].split()] # [limite_inferior,limite_superior]
+  
+  limites_aux = [i.replace('[','') for i in limites_aux] # quitamos corchetes en todos 
+  limites_aux = [i.replace(']','') for i in limites_aux]
+  limites_aux = [i.replace(',',' ') for i in limites_aux] # quitamos las comas
+
+  # procesamos cada par de límites
   for i in range(numero_articulaciones):
-    print('Articulación '+str(i)+':')
-    th[i] = float(input('Introduce el valor de theta: '))
-    a[i] = float(input('Introduce el valor de a: '))
-
-    while True:
-      articulaciones[i] = int(input('¿Es de revolución o prismática? (0/1): '))
-      if articulaciones[i] == REV or articulaciones[i] == PRI:
-        break
-      else:
-        print('Introduce 0 o 1')
-
     if articulaciones[i] == REV:
-      print('Introduce los limites de la articulación (en grados):')
-      # se introduce en grados para mayor comodidad del usuario, luego se convierte a radianes.
-      limites_aux = [float(input('Limite inferior: ')),float(input('Limite superior: '))]
-      limites[i] = [radians(limites_aux[0]),radians(limites_aux[1])]
-
+      limites[i] = [radians(float(j)) for j in limites_aux[i].split()]
     elif articulaciones[i] == PRI:
-      print('Introduce los limites de la articulación:')
-      limites[i] = [float(input('Limite inferior: ')),float(input('Limite superior: '))]
+      limites[i] = [float(j) for j in limites_aux[i].split()]
+
+  print('limites final: '+str(limites))
+
+  return articulaciones, limites, th, a
+
+  
 
 
 
 
-numero_articulaciones =  int(input('Introduce el número de articulaciones: '))
 
-# redimensionamos los tamaños de los arrays.
-articulaciones = [0]*numero_articulaciones
-limites = [0]*numero_articulaciones
-th = [0]*numero_articulaciones
-a = [0]*numero_articulaciones
+# **********************************************************************************************************************
+# **********************************************************************************************************************
+# ? COMIENZA EL PROGRAMA
+nombre_fichero = input('Introduce el nombre del fichero de entrada: ')
+articulaciones, limites, th, a = leer_fichero(nombre_fichero)
 
-obtener_articulaciones(numero_articulaciones)
-
-# print('Articulaciones: '+str(articulaciones))
-# print('Limites: '+str(limites))
-# print('th: '+str(th))
-# print('a: '+str(a))
-
-
-
+print('Articulaciones: '+str(articulaciones))
+print('Limites: '+str(limites))
+print('th: '+str(th))
+print('a: '+str(a))
 
 # mientras la distancia sea mayor que epsilon, y además se comprueba que no se ha entrado en un bucle infinito
 # por ejemplo, con el brazo totalmente extendido, si el objetivo está fuera del radio de acción del brazo
@@ -181,15 +196,14 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
 
     # T es el punto al que queremos llegar (variable objetivo)
     # oFinal es el último punto, el que alineamos entre el objetivo y 02
-    # oAnterior es la articulación que movemos
-    # oAnterior es un punto de O, que se va moviendo de final a principio.
+    # oAnterior es la articulación que movemos (va cambiando desed la última hasta la primera)
 
     T = objetivo
     oAnterior = O[-1][len(th)-i-1]
     oFinal = O[-1][-1]
 
 
-    # detectamos si la articulación es de revolución o prismática
+    #? detectamos si la articulación es de revolución o prismática
     #* REVOLUCIÓN:
     if articulaciones[len(th)-i-1] == REV:
       print('\n- Articulación de revolución')
@@ -211,24 +225,24 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       elif th[len(th)-i-1] < -pi:
         th[len(th)-i-1] += 2*pi
 
-      # Actualizar a --> controlamos que a esté entre los limites
-      if th[len(th)-i-1] < limites[len(th)-i-1][0]:
-        # articulación ha llegado al limite inferior
+      # Actualizar th --> controlamos que está dentro de los límites
+      if th[len(th)-i-1] < limites[len(th)-i-1][0]: # articulación ha llegado al limite inferior
         print('Limite inferior alcanzado')
         th[len(th)-i-1] = limites[len(th)-i-1][0]
-      elif th[len(th)-i-1] > limites[len(th)-i-1][1]:
-        # articulación ha llegado al limite superior
+
+      elif th[len(th)-i-1] > limites[len(th)-i-1][1]: # articulación ha llegado al limite superior
         print('Limite superior alcanzado')
         th[len(th)-i-1] = limites[len(th)-i-1][1]
-      else:
-        # articulación no ha llegado a ningún limite
+
+      else: # articulación no ha llegado a ningún limite
         th[len(th)-i-1] = th[len(th)-i-1]
 
 
     # * PRISMÁTICA:
     if articulaciones[len(th)-i-1] == PRI:
-      # w es el sumatorio de todos los ángulos hasta la articulación que estamos moviendo
       print('\n- Articulación prismática')
+
+      # w es el sumatorio de todos los ángulos hasta la articulación que estamos moviendo
       w = 0
       for j in range(len(th)-i):
         w += th[j]
@@ -237,7 +251,7 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
       # vectorW = [cos(w),sin(w)], es un vector unitario en estas direcciones desde Oi-1
       vectorW = [cos(w),sin(w)]
 
-      # d es la distancia, d= vectorW * (R-On)
+      # d es la distancia, d = vectorW * (R-On)
       d = np.dot(vectorW,np.subtract(T,oFinal))
       print ('d = '+str(d))
 
