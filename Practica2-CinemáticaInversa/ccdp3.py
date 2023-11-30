@@ -60,10 +60,6 @@ def matriz_T(d,th,a,al):
          ]
 
 
-
-
-
-
 def cin_dir(th,a):
   #Sea 'th' el vector de thetas
   #Sea 'a'  el vector de longitudes
@@ -74,9 +70,6 @@ def cin_dir(th,a):
     tmp=np.dot(T,[0,0,0,1])
     o.append([tmp[0],tmp[1]])
   return o
-
-
-
 
 
 
