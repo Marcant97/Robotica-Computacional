@@ -264,9 +264,11 @@ while (dist > Epsilon and abs(prev-dist) > Epsilon/100.):
       if a[len(th)-i-1]+d < limites[len(th)-i-1][0]:
         # articulación ha llegado al limite inferior
         a[len(th)-i-1] = limites[len(th)-i-1][0]
+        print('Limite inferior alcanzado')
       elif a[len(th)-i-1]+d > limites[len(th)-i-1][1]:
         # articulación ha llegado al limite superior
         a[len(th)-i-1] = limites[len(th)-i-1][1]
+        print('Limite superior alcanzado')
       else:
         # articulación no ha llegado a ningún limite
         a[len(th)-i-1] += d
