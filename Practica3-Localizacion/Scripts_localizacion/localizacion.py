@@ -65,54 +65,31 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   # sensorial, dentro de una regi�n cuadrada de centro "centro" y lado "2*radio".
 
   #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
-
-  # La imagen es una matriz de celdas, donde cada celda almacenará un valor.
-  incremento = 0.1
-  rango_valores = np.arange(-radio, radio+incremento, incremento)
-  print('rango_valores: ', rango_valores)
-  # creamos imagen, tamaño rango_valores x rango_valores
-  # imagen = [[0] * len(rango_valores) for _ in range(len(rango_valores))]
-  imagen = []
-  print('imagen previa: ', imagen)
-
-  mejor_posicion = [0,0,0,0] # x, y, orientación, valor
-
+  incremento=.1
+  mejor_posicion = [0,0,0,0]
+  imagen=[]
+  indice = 0
   i = -radio
   while i <= radio:
+    imagen.append([])
     j = -radio
     while j <= radio:
-      print('i: ', i, 'j: ', j)
-      ideal.set(centro[0]+i, centro[1]+j, ideal.orientation)
-      imagen = [[0] * len(rango_valores) for _ in range(len(rango_valores))]
-      print('INICIO ideal.x: ', ideal.x, 'ideal.y: ', ideal.y)
-
-      print('x:', int((ideal.x + radio) / incremento))
-      print('y:', int((ideal.y + radio) / incremento))
-      imagen[int((ideal.x + radio) / incremento)][int((ideal.y + radio) / incremento)] = ideal.measurement_prob(real.sense(balizas), balizas)
-
-      if (imagen[int((ideal.x + radio) / incremento)][int((ideal.y + radio) / incremento)] < mejor_posicion[3]):
-        mejor_posicion = [ideal.x, ideal.y, ideal.orientation, imagen[int((ideal.x + radio) / incremento)][int((ideal.y + radio) / incremento)]]
-
-
+      # cambiamos posicion de ideal
+      ideal.set(centro[0]+i,centro[1]+j,ideal.orientation)
+      # calculamos la probabilidad de que ideal este en la posicion de real
+      prob = ideal.measurement_prob(ideal.sense(balizas),balizas)
+      # añadimos la probabilidad a la fila actual de imagen
+      imagen[indice].append(prob)
+      if prob < mejor_posicion[3]:
+        mejor_posicion = [centro[0]+i,centro[1]+j,0,prob]
       j += incremento
+
+    indice += 1
     i += incremento
 
-  # print('imagen completa: ', imagen) 
-  x_nuevo = int((ideal.x + radio) / incremento)
-  y_nuevo = int((ideal.y + radio) / incremento)
-  # print('x_nuevo: ', x_nuevo, 'y_nuevo: ', y_nuevo)
 
-
-  # Asegurarse de que los índices estén dentro de los límites de la matriz imagen
-  x_nuevo = max(0, min(x_nuevo, len(imagen) - 1))
-  y_nuevo = max(0, min(y_nuevo, len(imagen[0]) - 1))
-
-
-  if (mejor_posicion[3] < imagen[x_nuevo][y_nuevo]):
-    # print('actualizando ideal')
-    ideal.set(imagen_i, imagen_j, ideal.orientation)
-    print('ideal.x: ', ideal.x, 'ideal.y: ', ideal.y)
-    print('real.x: ', real.x, 'real.y: ', real.y)
+  print(imagen)
+  ideal.set(mejor_posicion[0],mejor_posicion[1],ideal.orientation)
 
   
 
@@ -159,7 +136,7 @@ if len(sys.argv)<2 or int(sys.argv[1])<0 or int(sys.argv[1])>=len(trayectorias):
 objetivos = trayectorias[int(sys.argv[1])]
 
 # Definici�n de constantes:
-EPSILON = 1                #* Umbral de distancia (para encontrar la baliza y pasar a la siguiente)
+EPSILON = .1                #* Umbral de distancia (para encontrar la baliza y pasar a la siguiente)
 V = V_LINEAL/FPS            # Metros por fotograma
 W = V_ANGULAR*pi/(180*FPS)  # Radianes por fotograma
 
