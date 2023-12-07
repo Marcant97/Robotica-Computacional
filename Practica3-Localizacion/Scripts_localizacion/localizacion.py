@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Robótica Computacional 
-# Grado en Ingeniería Informática (Cuarto)
-# Práctica 5:
-#     Simulación de robots móviles holonómicos y no holonómicos.
+# Robï¿½tica Computacional 
+# Grado en Ingenierï¿½a Informï¿½tica (Cuarto)
+# Prï¿½ctica 5:
+#     Simulaciï¿½n de robots mï¿½viles holonï¿½micos y no holonï¿½micos.
 
 #localizacion.py
 
@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 # ******************************************************************************
-# Declaración de funciones
+# Declaraciï¿½n de funciones
 
 def distancia(a,b):
   # Distancia entre dos puntos (admite poses)
@@ -32,7 +32,7 @@ def angulo_rel(pose,p):
 def mostrar(objetivos,ideal,trayectoria):
   # Mostrar objetivos y trayectoria:
   #plt.ion() # modo interactivo
-  # Fijar los bordes del gráfico
+  # Fijar los bordes del grï¿½fico
   objT   = np.array(objetivos).T.tolist()
   trayT  = np.array(trayectoria).T.tolist()
   ideT   = np.array(ideal).T.tolist()
@@ -57,11 +57,22 @@ def mostrar(objetivos,ideal,trayectoria):
   plt.clf()
 
 def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
-  # Buscar la localización más probable del robot, a partir de su sistema
-  # sensorial, dentro de una región cuadrada de centro "centro" y lado "2*radio".
+  # Buscar la localizaciï¿½n mï¿½s probable del robot, a partir de su sistema
+  # sensorial, dentro de una regiï¿½n cuadrada de centro "centro" y lado "2*radio".
 
-
-
+  #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
+  # crear lista imagen, llamamos a measurement_prob y nos devuelve un nÃºmero
+  # se llama en cada una de las casillas de la regiÃ³n, y se guarda en la lista imagen.
+  # el valor mÃ¡s pequeÃ±o de weight es el que quermos
+  # a partri de 3 balizas, no deberÃ­a de darnos 2 casillas con valor mÃ­nimo
+  # si nos da 2 casillas con valor mÃ­nimo, tendremos que decidir cuÃ¡l coger.
+  # si el umbral es muy pequeÃ±o, se buscarÃ¡ en una Ã¡rea muy pequeÃ±a y se relocalizarÃ¡ mÃ¡s veces
+  # si el umbral es muy grande, se buscarÃ¡ en una Ã¡rea muy grande y se relocalizarÃ¡ menos veces
+    # ya que hemos dejado que el robot se separe mÃ¡s
+  # debremos llegar a un tÃ©rmino intermedio, para que sea aceptable pero sin que tarde muchÃ­simo
+  # si las casillas de imagen las hacemos muy pequeÃ±as, ganaremos en precisiÃ³n, dividir en 100 partes
+  # si las casillas de imagen las hacemos muy grandes, como si dividimos la regiÃ³n en 4 partes, serÃ­a super rÃ¡pido
+    # pero la precisiÃ³n serÃ­a muy mala.
 
 
   if mostrar:
@@ -81,17 +92,17 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
 
 # ******************************************************************************
 
-# Definición del robot:
-P_INICIAL = [0.,4.,0.] # Pose inicial (posición y orientacion)
+#* Definiciï¿½n del robot:
+P_INICIAL = [0.,4.,0.] # Pose inicial (posiciï¿½n y orientacion)
 V_LINEAL  = .7         # Velocidad lineal    (m/s)
-V_ANGULAR = 140.       # Velocidad angular   (º/s)
-FPS       = 10.        # Resolución temporal (fps)
+V_ANGULAR = 140.       # Velocidad angular   (ï¿½/s)
+FPS       = 10.        # Resoluciï¿½n temporal (fps)
 
 HOLONOMICO = 1
 GIROPARADO = 0
 LONGITUD   = .2
 
-# Definición de trayectorias:
+# Definiciï¿½n de trayectorias:
 trayectorias = [
     [[1,3]],
     [[0,2],[4,2]],
@@ -100,21 +111,21 @@ trayectorias = [
     [[2+2*sin(.8*pi*i),2+2*cos(.8*pi*i)] for i in range(5)]
     ]
 
-# Definición de los puntos objetivo:
+# Definiciï¿½n de los puntos objetivo:
 if len(sys.argv)<2 or int(sys.argv[1])<0 or int(sys.argv[1])>=len(trayectorias):
   sys.exit(sys.argv[0]+" <indice entre 0 y "+str(len(trayectorias)-1)+">")
 objetivos = trayectorias[int(sys.argv[1])]
 
-# Definición de constantes:
-EPSILON = .1                # Umbral de distancia
+# Definiciï¿½n de constantes:
+EPSILON = .1                #* Umbral de distancia (para encontrar la baliza y pasar a la siguiente)
 V = V_LINEAL/FPS            # Metros por fotograma
 W = V_ANGULAR*pi/(180*FPS)  # Radianes por fotograma
 
-ideal = robot()
+ideal = robot()           #* no tiene ruido lineal ni radial.
 ideal.set_noise(0,0,.1)   # Ruido lineal / radial / de sensado
 ideal.set(*P_INICIAL)     # operador 'splat'
 
-real = robot()
+real = robot()              #* si tiene ruido lineal y radial.
 real.set_noise(.01,.01,.1)  # Ruido lineal / radial / de sensado
 real.set(*P_INICIAL)
 
@@ -126,27 +137,36 @@ tiempo  = 0.
 espacio = 0.
 #random.seed(0)
 random.seed(datetime.now())
+
+#* primera llamada
+#! HACER LLAMADA A FUNCIÃ“N DE LOCALIZCIÃ“N Y EL ÃšLTIMO PARÃMETRO DE MOSTRAR A '1', para que muestre el mapa de colores.
+# localizacion(objetivos,real,ideal,[2.5,2.5],5,1)
+
 for punto in objetivos:
   while distancia(tray_ideal[-1],punto) > EPSILON and len(tray_ideal) <= 1000:
     pose = ideal.pose()
 
-    w = angulo_rel(pose,punto)
-    if w > W:  w =  W
-    if w < -W: w = -W
-    v = distancia(pose,punto)
-    if (v > V): v = V
-    if (v < 0): v = 0
+    w = angulo_rel(pose,punto) #* velocidad angular
+    if w > W:  w =  W #* las velocidades no son infinitas, si es mayor que la mÃ¡xima, se pone la mÃ¡xima.
+    if w < -W: w = -W #* si es menor que la mÃ­nima, se pone la mÃ­nima.
+    v = distancia(pose,punto) #* velocidad lineal
+    if (v > V): v = V #* si es mayor que la mÃ¡xima, se pone la mÃ¡xima.
+    if (v < 0): v = 0 #* si es menor que 0, se pone 0 --> para corregir velocidades negativas, no se puede
 
-    if HOLONOMICO:
+    if HOLONOMICO: #* holonÃ³mico
       if GIROPARADO and abs(w) > .01:
         v = 0
       ideal.move(w,v)
       real.move(w,v)
-    else:
+    else: #* triciclo
       ideal.move_triciclo(w,v,LONGITUD)
       real.move_triciclo(w,v,LONGITUD)
     tray_ideal.append(ideal.pose())
     tray_real.append(real.pose())
+
+    #* segunda llamada
+    #* una vez hemos actualizdo las poses de ambos robots, llamamos a la funciÃ³n de localizaciÃ³n.
+    #! localizacion(objetivos,real,ideal,[2.5,2.5],5,1) --> con el mostrar a 0 para que no saque todo el rato el mapa de colores.
     
     espacio += v
     tiempo  += 1
@@ -156,5 +176,5 @@ if len(tray_ideal) > 1000:
 print ("Recorrido: "+str(round(espacio,3))+"m / "+str(tiempo/FPS)+"s")
 print ("Distancia real al objetivo: "+\
     str(round(distancia(tray_real[-1],objetivos[-1]),3))+"m")
-mostrar(objetivos,tray_ideal,tray_real)  # Representación gráfica
+mostrar(objetivos,tray_ideal,tray_real)  # Representaciï¿½n grï¿½fica
 
