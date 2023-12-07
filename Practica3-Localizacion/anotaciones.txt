@@ -1,0 +1,13 @@
+  #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
+  # crear lista imagen, llamamos a measurement_prob y nos devuelve un número
+  # se llama en cada una de las casillas de la región, y se guarda en la lista imagen.
+  # el valor más pequeño de weight es el que quermos
+  # a partri de 3 balizas, no debería de darnos 2 casillas con valor mínimo
+  # si nos da 2 casillas con valor mínimo, tendremos que decidir cuál coger.
+  # si el umbral es muy pequeño, se buscará en una área muy pequeña y se relocalizará más veces
+  # si el umbral es muy grande, se buscará en una área muy grande y se relocalizará menos veces
+    # ya que hemos dejado que el robot se separe más
+  # debremos llegar a un término intermedio, para que sea aceptable pero sin que tarde muchísimo
+  # si las casillas de imagen las hacemos muy pequeñas, ganaremos en precisión, dividir en 100 partes
+  # si las casillas de imagen las hacemos muy grandes, como si dividimos la región en 4 partes, sería super rápido
+    # pero la precisión sería muy mala.

@@ -15,6 +15,10 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
+
+# from robot import measurement_prob
+
+
 # ******************************************************************************
 # Declaraci�n de funciones
 
@@ -61,18 +65,56 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   # sensorial, dentro de una regi�n cuadrada de centro "centro" y lado "2*radio".
 
   #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
-  # crear lista imagen, llamamos a measurement_prob y nos devuelve un número
-  # se llama en cada una de las casillas de la región, y se guarda en la lista imagen.
-  # el valor más pequeño de weight es el que quermos
-  # a partri de 3 balizas, no debería de darnos 2 casillas con valor mínimo
-  # si nos da 2 casillas con valor mínimo, tendremos que decidir cuál coger.
-  # si el umbral es muy pequeño, se buscará en una área muy pequeña y se relocalizará más veces
-  # si el umbral es muy grande, se buscará en una área muy grande y se relocalizará menos veces
-    # ya que hemos dejado que el robot se separe más
-  # debremos llegar a un término intermedio, para que sea aceptable pero sin que tarde muchísimo
-  # si las casillas de imagen las hacemos muy pequeñas, ganaremos en precisión, dividir en 100 partes
-  # si las casillas de imagen las hacemos muy grandes, como si dividimos la región en 4 partes, sería super rápido
-    # pero la precisión sería muy mala.
+
+  # La imagen es una matriz de celdas, donde cada celda almacenará un valor.
+  incremento = 0.1
+  rango_valores = np.arange(-radio, radio+incremento, incremento)
+  print('rango_valores: ', rango_valores)
+  # creamos imagen, tamaño rango_valores x rango_valores
+  # imagen = [[0] * len(rango_valores) for _ in range(len(rango_valores))]
+  imagen = []
+  print('imagen previa: ', imagen)
+
+  mejor_posicion = [0,0,0,0] # x, y, orientación, valor
+
+  i = -radio
+  while i <= radio:
+    j = -radio
+    while j <= radio:
+      print('i: ', i, 'j: ', j)
+      ideal.set(centro[0]+i, centro[1]+j, ideal.orientation)
+      imagen = [[0] * len(rango_valores) for _ in range(len(rango_valores))]
+      print('INICIO ideal.x: ', ideal.x, 'ideal.y: ', ideal.y)
+
+      print('x:', int((ideal.x + radio) / incremento))
+      print('y:', int((ideal.y + radio) / incremento))
+      imagen[int((ideal.x + radio) / incremento)][int((ideal.y + radio) / incremento)] = ideal.measurement_prob(real.sense(balizas), balizas)
+
+      if (imagen[int((ideal.x + radio) / incremento)][int((ideal.y + radio) / incremento)] < mejor_posicion[3]):
+        mejor_posicion = [ideal.x, ideal.y, ideal.orientation, imagen[int((ideal.x + radio) / incremento)][int((ideal.y + radio) / incremento)]]
+
+
+      j += incremento
+    i += incremento
+
+  # print('imagen completa: ', imagen) 
+  x_nuevo = int((ideal.x + radio) / incremento)
+  y_nuevo = int((ideal.y + radio) / incremento)
+  # print('x_nuevo: ', x_nuevo, 'y_nuevo: ', y_nuevo)
+
+
+  # Asegurarse de que los índices estén dentro de los límites de la matriz imagen
+  x_nuevo = max(0, min(x_nuevo, len(imagen) - 1))
+  y_nuevo = max(0, min(y_nuevo, len(imagen[0]) - 1))
+
+
+  if (mejor_posicion[3] < imagen[x_nuevo][y_nuevo]):
+    # print('actualizando ideal')
+    ideal.set(imagen_i, imagen_j, ideal.orientation)
+    print('ideal.x: ', ideal.x, 'ideal.y: ', ideal.y)
+    print('real.x: ', real.x, 'real.y: ', real.y)
+
+  
 
 
   if mostrar:
@@ -117,7 +159,7 @@ if len(sys.argv)<2 or int(sys.argv[1])<0 or int(sys.argv[1])>=len(trayectorias):
 objetivos = trayectorias[int(sys.argv[1])]
 
 # Definici�n de constantes:
-EPSILON = .1                #* Umbral de distancia (para encontrar la baliza y pasar a la siguiente)
+EPSILON = 1                #* Umbral de distancia (para encontrar la baliza y pasar a la siguiente)
 V = V_LINEAL/FPS            # Metros por fotograma
 W = V_ANGULAR*pi/(180*FPS)  # Radianes por fotograma
 
@@ -140,7 +182,7 @@ random.seed(datetime.now())
 
 #* primera llamada
 #! HACER LLAMADA A FUNCIÓN DE LOCALIZCIÓN Y EL ÚLTIMO PARÁMETRO DE MOSTRAR A '1', para que muestre el mapa de colores.
-# localizacion(objetivos,real,ideal,[2.5,2.5],5,1)
+localizacion(objetivos,real,ideal,[2.5,2.5],5,1)
 
 for punto in objetivos:
   while distancia(tray_ideal[-1],punto) > EPSILON and len(tray_ideal) <= 1000:
@@ -165,9 +207,13 @@ for punto in objetivos:
     tray_real.append(real.pose())
 
     #* segunda llamada
+    #* comparar ideal con real, si el error es muy grande llamar a localizacion
     #* una vez hemos actualizdo las poses de ambos robots, llamamos a la función de localización.
     #! localizacion(objetivos,real,ideal,[2.5,2.5],5,1) --> con el mostrar a 0 para que no saque todo el rato el mapa de colores.
-    
+    # print('antes localización')
+    # localizacion(objetivos,real,ideal,[2.5,2.5],5,0)
+    # print('despues localización')
+
     espacio += v
     tiempo  += 1
 
