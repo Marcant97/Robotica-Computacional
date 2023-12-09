@@ -66,30 +66,54 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
 
   #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
   incremento=.1
-  mejor_posicion = [0,0,0,0]
+  mejor_posicion = [ideal.x, ideal.y, ideal.orientation, ideal.weight] # x,y,orientacion,probabilidad
   imagen=[]
   indice = 0
-  i = -radio
-  while i <= radio:
+  # print('centro[0]: ',centro[0])
+  # print('centro[1]: ',centro[1])
+  # print('radio: ',radio)
+  # i = -radio
+  i = centro[0]-radio
+  while i <= centro[0]+radio:
     imagen.append([])
-    j = -radio
-    while j <= radio:
+    # j = -radio
+    j = centro[1]-radio
+    while j <= centro[1]+radio:
+      # print('i: ' + str(i) + ' j: ' + str(j))
       # cambiamos posicion de ideal
-      ideal.set(centro[0]+i,centro[1]+j,ideal.orientation)
+      # ideal.set(centro[0]+i,centro[1]+j,ideal.orientation)
+      ideal.set(i,j,ideal.orientation)
       # calculamos la probabilidad de que ideal este en la posicion de real
       prob = ideal.measurement_prob(ideal.sense(balizas),balizas)
+      # prob /= 1.0  # normalizamos la probabilidad
+      # print('prob: ',prob)
       # añadimos la probabilidad a la fila actual de imagen
       imagen[indice].append(prob)
-      if prob < mejor_posicion[3]:
-        mejor_posicion = [centro[0]+i,centro[1]+j,0,prob]
+      if prob > mejor_posicion[3]:
+        # mejor_posicion = [centro[0]+i,centro[1]+j,ideal.orientation,prob]
+        mejor_posicion = [i,j,ideal.orientation,prob]
+        print('mejor_posicion: ',mejor_posicion)
       j += incremento
 
     indice += 1
     i += incremento
 
 
-  print(imagen)
+  # print(imagen)
   ideal.set(mejor_posicion[0],mejor_posicion[1],ideal.orientation)
+  print('real: ',real.pose())
+  print('ideal: ',ideal.pose())
+
+  # guardamos los valores de la matriz imagen en un fichero de texto
+  with open('imagen.txt', 'w') as f:
+    # mantener la relación de filas y columnas
+    for i in range(len(imagen)):
+      for j in range(len(imagen[i])):
+        f.write(str(imagen[i][j]) + ' ')
+      f.write('\n')
+
+
+
 
   
 
@@ -113,6 +137,7 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
 
 #* Definici�n del robot:
 P_INICIAL = [0.,4.,0.] # Pose inicial (posici�n y orientacion)
+P_PRUEBA = [0.,0.,0.] # Pose de prueba  (posici�n y orientacion)
 V_LINEAL  = .7         # Velocidad lineal    (m/s)
 V_ANGULAR = 140.       # Velocidad angular   (�/s)
 FPS       = 10.        # Resoluci�n temporal (fps)
@@ -142,7 +167,7 @@ W = V_ANGULAR*pi/(180*FPS)  # Radianes por fotograma
 
 ideal = robot()           #* no tiene ruido lineal ni radial.
 ideal.set_noise(0,0,.1)   # Ruido lineal / radial / de sensado
-ideal.set(*P_INICIAL)     # operador 'splat'
+ideal.set(*P_PRUEBA)     # operador 'splat'
 
 real = robot()              #* si tiene ruido lineal y radial.
 real.set_noise(.01,.01,.1)  # Ruido lineal / radial / de sensado
