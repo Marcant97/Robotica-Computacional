@@ -65,38 +65,36 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   # sensorial, dentro de una regi�n cuadrada de centro "centro" y lado "2*radio".
 
   #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
-  incremento=.1
-  mejor_posicion = [ideal.x, ideal.y, ideal.orientation, ideal.weight] # x,y,orientacion,probabilidad
+  incremento=1
+  mejor_posicion = [ideal.x, ideal.y, ideal.orientation, 0] # x,y,orientacion,probabilidad
   imagen=[]
   indice = 0
   # print('centro[0]: ',centro[0])
   # print('centro[1]: ',centro[1])
   # print('radio: ',radio)
   # i = -radio
-  i = centro[0]-radio
-  while i <= centro[0]+radio:
+  j = centro[1]-radio
+  while j <= centro[1]+radio:
     imagen.append([])
     # j = -radio
-    j = centro[1]-radio
-    while j <= centro[1]+radio:
+    i = centro[0]-radio
+    while i <= centro[0]+radio:
       # print('i: ' + str(i) + ' j: ' + str(j))
       # cambiamos posicion de ideal
       # ideal.set(centro[0]+i,centro[1]+j,ideal.orientation)
       ideal.set(i,j,ideal.orientation)
-      # calculamos la probabilidad de que ideal este en la posicion de real
+      print('ideal: ',ideal.pose())
+      
       prob = ideal.measurement_prob(ideal.sense(balizas),balizas)
-      # prob /= 1.0  # normalizamos la probabilidad
-      # print('prob: ',prob)
-      # añadimos la probabilidad a la fila actual de imagen
+
       imagen[indice].append(prob)
       if prob > mejor_posicion[3]:
         # mejor_posicion = [centro[0]+i,centro[1]+j,ideal.orientation,prob]
         mejor_posicion = [i,j,ideal.orientation,prob]
         print('mejor_posicion: ',mejor_posicion)
-      j += incremento
-
+      i += incremento
     indice += 1
-    i += incremento
+    j += incremento
 
 
   # print(imagen)
@@ -137,7 +135,7 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
 
 #* Definici�n del robot:
 P_INICIAL = [0.,4.,0.] # Pose inicial (posici�n y orientacion)
-P_PRUEBA = [0.,0.,0.] # Pose de prueba  (posici�n y orientacion)
+P_PRUEBA = [0.,-2.,0.] # Pose de prueba  (posici�n y orientacion)
 V_LINEAL  = .7         # Velocidad lineal    (m/s)
 V_ANGULAR = 140.       # Velocidad angular   (�/s)
 FPS       = 10.        # Resoluci�n temporal (fps)
