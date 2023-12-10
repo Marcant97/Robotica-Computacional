@@ -60,60 +60,40 @@ def mostrar(objetivos,ideal,trayectoria):
   input()
   plt.clf()
 
+
 def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   # Buscar la localizaci�n m�s probable del robot, a partir de su sistema
   # sensorial, dentro de una regi�n cuadrada de centro "centro" y lado "2*radio".
 
-  #? robot ideal encuentre al robot real. (una vez superado el umbral que definamos)
-  incremento=1
-  mejor_posicion = [ideal.x, ideal.y, ideal.orientation, 0] # x,y,orientacion,probabilidad
+  mejor_error = ideal.measurement_prob(real.sense(balizas), balizas)  # balizas, puntos objetivos
+  incremento=0.1
+  #? ANOTACIÓN: he probado a poner la mejor posición como el centro o como la posición ideal del robot
+  #? cuando ponía el centro si no encontraba algo mejor daba saltos al centro extraños, cosa que no
+  #? me parecía razonable. Por eso he decidido poner la posición ideal del robot como mejor posición
+  mejor_pos = ideal.pose()
   imagen=[]
-  indice = 0
-  # print('centro[0]: ',centro[0])
-  # print('centro[1]: ',centro[1])
-  # print('radio: ',radio)
-  # i = -radio
-  j = centro[1]-radio
-  while j <= centro[1]+radio:
-    imagen.append([])
-    # j = -radio
-    i = centro[0]-radio
-    while i <= centro[0]+radio:
-      # print('i: ' + str(i) + ' j: ' + str(j))
-      # cambiamos posicion de ideal
-      # ideal.set(centro[0]+i,centro[1]+j,ideal.orientation)
-      ideal.set(i,j,ideal.orientation)
-      print('ideal: ',ideal.pose())
-      
-      prob = ideal.measurement_prob(ideal.sense(balizas),balizas)
 
-      imagen[indice].append(prob)
-      if prob > mejor_posicion[3]:
-        # mejor_posicion = [centro[0]+i,centro[1]+j,ideal.orientation,prob]
-        mejor_posicion = [i,j,ideal.orientation,prob]
-        print('mejor_posicion: ',mejor_posicion)
-      i += incremento
-    indice += 1
-    j += incremento
+  rango = np.arange(-radio, radio, incremento) # obtenemos rangos a partir del radio y el incremento
+  # Comenzamos a recorrer, primero en j para rellenar imagen[] por filas
+  for j in rango: 
+    imagen.append([]) # introducimos una fila nueva vacía
+    # recorremos todos los valores para un j.
+    for i in rango:
+      # Actualizamos la posicion del robot ideal y calculamos el error
+      ideal.set(centro[0]+i, centro[1]+j, ideal.orientation)
+      error_actual = ideal.measurement_prob(real.sense(balizas),balizas)
 
+      # Introducimos el error en la fila actual, ya que -1 es la última.
+      imagen[-1].append(error_actual)
+      # Si el error es mejor, actualizamos y guardamos la posición.
+      if error_actual < mejor_error:
+        mejor_error = error_actual
+        mejor_pos = [centro[0]+i, centro[1]+j]
 
-  # print(imagen)
-  ideal.set(mejor_posicion[0],mejor_posicion[1],ideal.orientation)
-  print('real: ',real.pose())
-  print('ideal: ',ideal.pose())
-
-  # guardamos los valores de la matriz imagen en un fichero de texto
-  with open('imagen.txt', 'w') as f:
-    # mantener la relación de filas y columnas
-    for i in range(len(imagen)):
-      for j in range(len(imagen[i])):
-        f.write(str(imagen[i][j]) + ' ')
-      f.write('\n')
-
-
-
-
-  
+  # Actualizamos el robot ideal con la mejor posición
+  print('mejor error: ', mejor_error)
+  ideal.set(mejor_pos[0],mejor_pos[1],ideal.orientation)
+ 
 
 
   if mostrar:
@@ -135,7 +115,6 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
 
 #* Definici�n del robot:
 P_INICIAL = [0.,4.,0.] # Pose inicial (posici�n y orientacion)
-P_PRUEBA = [0.,-2.,0.] # Pose de prueba  (posici�n y orientacion)
 V_LINEAL  = .7         # Velocidad lineal    (m/s)
 V_ANGULAR = 140.       # Velocidad angular   (�/s)
 FPS       = 10.        # Resoluci�n temporal (fps)
@@ -165,7 +144,7 @@ W = V_ANGULAR*pi/(180*FPS)  # Radianes por fotograma
 
 ideal = robot()           #* no tiene ruido lineal ni radial.
 ideal.set_noise(0,0,.1)   # Ruido lineal / radial / de sensado
-ideal.set(*P_PRUEBA)     # operador 'splat'
+ideal.set(*P_INICIAL)     # operador 'splat'
 
 real = robot()              #* si tiene ruido lineal y radial.
 real.set_noise(.01,.01,.1)  # Ruido lineal / radial / de sensado
@@ -180,8 +159,7 @@ espacio = 0.
 #random.seed(0)
 random.seed(datetime.now())
 
-#* primera llamada
-#! HACER LLAMADA A FUNCIÓN DE LOCALIZCIÓN Y EL ÚLTIMO PARÁMETRO DE MOSTRAR A '1', para que muestre el mapa de colores.
+#* primera llamada, antes del bucle.
 localizacion(objetivos,real,ideal,[2.5,2.5],5,1)
 
 for punto in objetivos:
@@ -206,13 +184,18 @@ for punto in objetivos:
     tray_ideal.append(ideal.pose())
     tray_real.append(real.pose())
 
-    #* segunda llamada
-    #* comparar ideal con real, si el error es muy grande llamar a localizacion
-    #* una vez hemos actualizdo las poses de ambos robots, llamamos a la función de localización.
-    #! localizacion(objetivos,real,ideal,[2.5,2.5],5,1) --> con el mostrar a 0 para que no saque todo el rato el mapa de colores.
-    # print('antes localización')
-    # localizacion(objetivos,real,ideal,[2.5,2.5],5,0)
-    # print('despues localización')
+    # cálculo del error actual
+    error_actual = ideal.measurement_prob(real.sense(objetivos),objetivos)
+    # menos de 0.2 es demasiado pequeño y tarda varios minutos. 
+    # más de 0.2 es demasiado grande y no suele hacer correcciones
+    if error_actual > 0.2: 
+      print('----------------')
+      print('error actual: ', error_actual)
+      print('error corregido')
+      print('real: ', real.pose())
+      print('ideal previo: ', ideal.pose())
+      localizacion(objetivos,real,ideal,[2.5,2.5],5,0)
+      print('nuevo ideal: ', ideal.pose())
 
     espacio += v
     tiempo  += 1
