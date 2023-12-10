@@ -107,6 +107,16 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
     plt.plot(balT[0],balT[1],'or',ms=10)
     plt.plot(ideal.x,ideal.y,'D',c='#ff00ff',ms=10,mew=2)
     plt.plot(real.x, real.y, 'D',c='#00ff00',ms=10,mew=2)
+
+  # *****
+    # Flecha que indica la orientación
+    arrow_length = 0.8  # Longitud de la flecha
+    dx = arrow_length * np.cos(ideal.orientation)
+    dy = arrow_length * np.sin(ideal.orientation)
+    plt.arrow(ideal.x, ideal.y, dx, dy, color='violet', width=0.05, head_width=0.2, head_length=0.2)
+    plt.arrow(real.x, real.y, dx, dy, color='green', width=0.05, head_width=0.2, head_length=0.2)
+
+  # *****
     plt.show()
     input()
     plt.clf()
