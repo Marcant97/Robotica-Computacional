@@ -15,6 +15,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
+from matplotlib.patches import FancyArrow
 
 # from robot import measurement_prob
 
@@ -34,9 +35,9 @@ def angulo_rel(pose,p):
   return w
 
 def mostrar(objetivos,ideal,trayectoria):
-  # Mostrar objetivos y trayectoria:
-  #plt.ion() # modo interactivo
-  # Fijar los bordes del gr�fico
+  arrows_ideal = []  # Lista para almacenar las flechas del robot ideal
+  arrows_real = []  # Lista para almacenar las flechas del robot real
+
   objT   = np.array(objetivos).T.tolist()
   trayT  = np.array(trayectoria).T.tolist()
   ideT   = np.array(ideal).T.tolist()
@@ -48,14 +49,56 @@ def mostrar(objetivos,ideal,trayectoria):
   plt.ylim(centro[1]-radio,centro[1]+radio)
   # Representar objetivos y trayectoria
   idealT = np.array(ideal).T.tolist()
-  plt.plot(idealT[0],idealT[1],'-g')
   plt.plot(trayectoria[0][0],trayectoria[0][1],'or')
   r = radio * .1
-  for p in trayectoria:
-    plt.plot([p[0],p[0]+r*cos(p[2])],[p[1],p[1]+r*sin(p[2])],'-r')
-    #plt.plot(p[0],p[1],'or')
   objT   = np.array(objetivos).T.tolist()
   plt.plot(objT[0],objT[1],'-.o')
+
+
+  plt.ion() #* modo interactivo activado
+
+  #* Se imprime trayectoria del robot real poco a poco (con flechas cada 10 puntos)
+  for i in range(0, len(trayectoria), 5):
+    p = trayectoria[i]
+    arrow_length = r
+    dx = arrow_length * cos(p[2])
+    dy = arrow_length * sin(p[2])
+    arrow_real = FancyArrow(p[0], p[1], dx, dy, color='red', width=0.01, head_width=0.2, head_length=0.1)
+    plt.gca().add_patch(arrow_real)
+    arrows_real.append(arrow_real)
+    plt.pause(0.25)  # Pausa para permitir la interactividad
+
+  #* Se imprime trayectoria del robot ideal poco a poco (con flechas cada 10 puntos)
+  for i in range(0, len(ideal), 5):
+    p = ideal[i]
+    arrow_length = r
+    dx = arrow_length * cos(p[2])
+    dy = arrow_length * sin(p[2])
+    arrow_ideal = FancyArrow(p[0], p[1], dx, dy, color='green', width=0.01, head_width=0.2, head_length=0.1)
+    plt.gca().add_patch(arrow_ideal)
+    arrows_ideal.append(arrow_ideal)
+    plt.pause(0.25)  # Pausa para permitir la interactividad
+
+
+#* Se imprime trayectoria del robot real e ideal
+  for p in trayectoria: # real
+    plt.plot([p[0],p[0]+r*cos(p[2])],[p[1],p[1]+r*sin(p[2])],'-r')
+      #   #plt.plot(p[0],p[1],'or')
+
+  plt.plot(idealT[0],idealT[1],'-g') #ideal
+
+
+  plt.ioff()  # Desactivar el modo interactivo al final
+
+  #* Eliminamos las flechas para que quede más limpio el dibujo
+  # Eliminar las flechas del robot real al finalizar el bucle
+  for arrow in arrows_real:
+      arrow.remove()
+  # Eliminar las flechas del robot ideal al finalizar el bucle
+  for arrow in arrows_ideal:
+      arrow.remove()
+
+
   plt.show()
   input()
   plt.clf()
