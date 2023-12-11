@@ -243,7 +243,7 @@ for punto in objetivos:
     error_actual = ideal.measurement_prob(real.sense(objetivos),objetivos)
     # menos de 0.2 es demasiado pequeño y tarda varios minutos. 
     # más de 0.2 es demasiado grande y no suele hacer correcciones
-    if error_actual > 0.4: 
+    if error_actual > 0.2: 
       print('----------------')
       print('error actual: ', error_actual)
       print('error corregido')
