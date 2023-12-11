@@ -114,11 +114,12 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   #? cuando ponía el centro si no encontraba algo mejor daba saltos al centro extraños, cosa que no
   #? me parecía razonable. Por eso he decidido poner la posición ideal del robot como mejor posición
   mejor_pos = ideal.pose()
+  orientacion_ideal = ideal.orientation # me guardo la orientación para que no coja la última que probé.
   imagen=[]
 
   rango = np.arange(-radio, radio, incremento) # obtenemos rangos a partir del radio y el incremento
   # Comenzamos a recorrer, primero en j para rellenar imagen[] por filas
-  for j in rango: 
+  for j in rango:
     imagen.append([]) # introducimos una fila nueva vacía
     # recorremos todos los valores para un j.
     for i in rango:
@@ -132,10 +133,11 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
       if error_actual < mejor_error:
         mejor_error = error_actual
         mejor_pos = [centro[0]+i, centro[1]+j]
+        # orientacion_ideal = ideal.orientation
 
   # Actualizamos el robot ideal con la mejor posición
   print('mejor error: ', mejor_error)
-  ideal.set(mejor_pos[0],mejor_pos[1],ideal.orientation)
+  ideal.set(mejor_pos[0],mejor_pos[1],orientacion_ideal)
  
 
 
@@ -241,7 +243,7 @@ for punto in objetivos:
     error_actual = ideal.measurement_prob(real.sense(objetivos),objetivos)
     # menos de 0.2 es demasiado pequeño y tarda varios minutos. 
     # más de 0.2 es demasiado grande y no suele hacer correcciones
-    if error_actual > 0.2: 
+    if error_actual > 0.4: 
       print('----------------')
       print('error actual: ', error_actual)
       print('error corregido')
@@ -259,4 +261,3 @@ print ("Recorrido: "+str(round(espacio,3))+"m / "+str(tiempo/FPS)+"s")
 print ("Distancia real al objetivo: "+\
     str(round(distancia(tray_real[-1],objetivos[-1]),3))+"m")
 mostrar(objetivos,tray_ideal,tray_real)  # Representaci�n gr�fica
-
