@@ -66,7 +66,7 @@ def mostrar(objetivos,ideal,trayectoria):
     arrow_real = FancyArrow(p[0], p[1], dx, dy, color='red', width=0.01, head_width=0.2, head_length=0.1)
     plt.gca().add_patch(arrow_real)
     arrows_real.append(arrow_real)
-    plt.pause(0.25)  # Pausa para permitir la interactividad
+    plt.pause(0.1)  # Pausa para permitir la interactividad
 
   #* Se imprime trayectoria del robot ideal poco a poco (con flechas cada 10 puntos)
   for i in range(0, len(ideal), 5):
@@ -77,7 +77,7 @@ def mostrar(objetivos,ideal,trayectoria):
     arrow_ideal = FancyArrow(p[0], p[1], dx, dy, color='green', width=0.01, head_width=0.2, head_length=0.1)
     plt.gca().add_patch(arrow_ideal)
     arrows_ideal.append(arrow_ideal)
-    plt.pause(0.25)  # Pausa para permitir la interactividad
+    plt.pause(0.1)  # Pausa para permitir la interactividad
 
 
 #* Se imprime trayectoria del robot real e ideal
@@ -109,22 +109,19 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   # sensorial, dentro de una regi�n cuadrada de centro "centro" y lado "2*radio".
 
   mejor_error = ideal.measurement_prob(real.sense(balizas), balizas)  # balizas, puntos objetivos
-  incremento=0.1
-  #? ANOTACIÓN: he probado a poner la mejor posición como el centro o como la posición ideal del robot
-  #? cuando ponía el centro si no encontraba algo mejor daba saltos al centro extraños, cosa que no
-  #? me parecía razonable. Por eso he decidido poner la posición ideal del robot como mejor posición
   mejor_pos = ideal.pose()
-  orientacion_ideal = ideal.orientation # me guardo la orientación para que no coja la última que probé.
+  orientacion_ideal = ideal.orientation
+  incremento=0.1
   imagen=[]
 
   rango = np.arange(-radio, radio, incremento) # obtenemos rangos a partir del radio y el incremento
-  # Comenzamos a recorrer, primero en j para rellenar imagen[] por filas
+
   for j in rango:
-    imagen.append([]) # introducimos una fila nueva vacía
-    # recorremos todos los valores para un j.
+    imagen.append([])
+
     for i in rango:
       # Actualizamos la posicion del robot ideal y calculamos el error
-      ideal.set(centro[0]+i, centro[1]+j, ideal.orientation)
+      ideal.set(centro[0]+i, centro[1]+j, orientacion_ideal)
       error_actual = ideal.measurement_prob(real.sense(balizas),balizas)
 
       # Introducimos el error en la fila actual, ya que -1 es la última.
@@ -132,13 +129,10 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
       # Si el error es mejor, actualizamos y guardamos la posición.
       if error_actual < mejor_error:
         mejor_error = error_actual
-        mejor_pos = [centro[0]+i, centro[1]+j]
-        # orientacion_ideal = ideal.orientation
+        mejor_pos = [centro[0]+i, centro[1]+j, orientacion_ideal]
 
   # Actualizamos el robot ideal con la mejor posición
-  print('mejor error: ', mejor_error)
-  ideal.set(mejor_pos[0],mejor_pos[1],orientacion_ideal)
- 
+  ideal.set(mejor_pos[0],mejor_pos[1], orientacion_ideal) 
 
 
   if mostrar:
@@ -154,7 +148,7 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
     plt.plot(real.x, real.y, 'D',c='#00ff00',ms=10,mew=2)
 
   # *****
-    # Flecha que indica la orientación
+    #* Flecha que indica la orientación
     arrow_length = 0.8  # Longitud de la flecha
     dx = arrow_length * np.cos(ideal.orientation)
     dy = arrow_length * np.sin(ideal.orientation)
@@ -214,8 +208,10 @@ espacio = 0.
 #random.seed(0)
 random.seed(datetime.now())
 
+
+
 #* primera llamada, antes del bucle.
-localizacion(objetivos,real,ideal,[2.5,2.5],5,1)
+localizacion(objetivos,real,ideal,[ideal.x,ideal.y],5,1)
 
 for punto in objetivos:
   while distancia(tray_ideal[-1],punto) > EPSILON and len(tray_ideal) <= 1000:
@@ -241,16 +237,15 @@ for punto in objetivos:
 
     # cálculo del error actual
     error_actual = ideal.measurement_prob(real.sense(objetivos),objetivos)
-    # menos de 0.2 es demasiado pequeño y tarda varios minutos. 
-    # más de 0.2 es demasiado grande y no suele hacer correcciones
-    if error_actual > 0.2: 
+    # menos de 0.15 es demasiado pequeño y tarda demasiado.
+    # más de 0.15 es demasiado grande y suele hacer pocas correcciones
+    if error_actual > 0.15: 
       print('----------------')
-      print('error actual: ', error_actual)
-      print('error corregido')
-      print('real: ', real.pose())
-      print('ideal previo: ', ideal.pose())
-      localizacion(objetivos,real,ideal,[2.5,2.5],5,0)
-      print('nuevo ideal: ', ideal.pose())
+      print('error detectado actual: ', error_actual)
+      print('robot real: ', real.pose())
+      print('robot ideal previo: ', ideal.pose())
+      localizacion(objetivos,real,ideal,[ideal.x,ideal.y],2,0)
+      print('robot ideal corregido: ', ideal.pose())
 
     espacio += v
     tiempo  += 1
